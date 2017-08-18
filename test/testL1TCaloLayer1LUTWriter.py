@@ -24,7 +24,7 @@ process.source = cms.Source('EmptySource',
 # Writes LUT for the only event to be processed - ignores data itself.
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1) )
 
-process.load('L1Trigger.L1TCaloLayer1Spy.l1tCaloLayer1LUTWriter_cfi')
+process.load('L1Trigger.L1TCaloLayer1LUTWriter.l1tCaloLayer1LUTWriter_cfi')
 process.l1tCaloLayer1LUTWriter.fileName = options.outputFile
 process.l1tCaloLayer1LUTWriter.saveHcalScaleFile = options.saveHcalScaleFile
 process.p = cms.Path(process.l1tCaloLayer1LUTWriter)
@@ -43,9 +43,11 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '90X_upgrade2017_realistic_v20'
 
 # To get L1 CaloParams, until in GT
 #process.load('L1Trigger.L1TCalorimeter.caloStage2Params_2017_v1_8_cfi')
-process.load('L1Trigger.L1TCalorimeter.caloStage2Params_2017_v1_8_updateHFSF_cfi')
+process.load('L1Trigger.L1TCalorimeter.caloStage2Params_2017_v1_8_2_updateHFSF_v6MET_cfi')
 #process.load("L1Trigger.L1TCalorimeter.hackConditions_cff")
-from L1Trigger.L1TCaloLayer1Spy.layer1SecondStageLUTs import layer1SecondStageLUT
+
+# These are not yet in CaloParams by default
+from L1Trigger.L1TCaloLayer1LUTWriter.layer1SecondStageLUTs import layer1SecondStageLUT
 process.caloStage2Params.layer1SecondStageLUT = layer1SecondStageLUT 
 
 
