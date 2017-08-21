@@ -341,8 +341,9 @@ L1TCaloLayer1LUTWriter::analyze(const edm::Event& iEvent, const edm::EventSetup&
   unsigned char checksum[MD5_DIGEST_LENGTH];
   MD5_Final(checksum, &md5context);
   std::stringstream checksumString;
+  checksumString << std::hex << std::setfill('0');
   for(size_t i=0; i<MD5_DIGEST_LENGTH; ++i) {
-    checksumString << std::hex << static_cast<unsigned int>(checksum[i]);
+    checksumString << std::setw(2) << static_cast<unsigned int>(checksum[i]);
   }
   if ( !writeXMLParam("md5checksum", "string", checksumString.str()) ) return;
 
@@ -405,8 +406,9 @@ L1TCaloLayer1LUTWriter::analyze(const edm::Event& iEvent, const edm::EventSetup&
     unsigned char checksum[MD5_DIGEST_LENGTH];
     MD5_Final(checksum, &md5context);
     std::stringstream checksumString;
+    checksumString << std::hex << std::setfill('0');
     for(size_t i=0; i<MD5_DIGEST_LENGTH; ++i) {
-      checksumString << std::hex << static_cast<unsigned int>(checksum[i]);
+      checksumString << std::setw(2) << static_cast<unsigned int>(checksum[i]);
     }
     if ( !writeXMLParam("md5checksum", "string", checksumString.str()) ) return;
 
