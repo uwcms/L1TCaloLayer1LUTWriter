@@ -1,4 +1,5 @@
-#L1TCaloLayer1LUTWriter
+L1TCaloLayer1LUTWriter
+----------------------
 
 Setup instructions:
 ```bash
