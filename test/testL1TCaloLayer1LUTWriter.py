@@ -3,7 +3,7 @@ import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 
 from Configuration.StandardSequences.Eras import eras
-process = cms.Process("L1TCaloLayer1LUTWriter",eras.Run2_2017)
+process = cms.Process("L1TCaloLayer1LUTWriter",eras.Run2_2018)
 
 options = VarParsing()
 options.register('runNumber', 1, VarParsing.multiplicity.singleton, VarParsing.varType.int, 'Run to analyze')
@@ -38,7 +38,7 @@ process.schedule = cms.Schedule(process.p)
 process.l1tCaloLayer1LUTWriter.firmwareVersion = 3
 
 # Will affect the HCAL LUTs, and CaloParams if they are ever in GT...
-process.GlobalTag = GlobalTag(process.GlobalTag, '92X_upgrade2017_realistic_v10', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase1_2018_realistic', '')
 
 
 # To get L1 CaloParams, until in GT
