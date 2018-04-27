@@ -6,6 +6,7 @@ from Configuration.StandardSequences.Eras import eras
 process = cms.Process("L1TCaloLayer1LUTWriter",eras.Run2_2018)
 
 options = VarParsing()
+options.register('caloParams', '', VarParsing.multiplicity.singleton, VarParsing.varType.string, 'Input CaloParams location')
 options.register('runNumber', 1, VarParsing.multiplicity.singleton, VarParsing.varType.int, 'Run to analyze')
 options.register('outputFile', 'luts.xml', VarParsing.multiplicity.singleton, VarParsing.varType.string, 'Output XML File')
 options.register('saveHcalScaleFile', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, 'Output HCAL Compression Scale File')
@@ -41,17 +42,17 @@ process.l1tCaloLayer1LUTWriter.firmwareVersion = 3
 process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase1_2018_realistic', '')
 
 
-# To get L1 CaloParams, until in GT
-#process.load('L1Trigger.L1TCalorimeter.caloStage2Params_2017_v1_8_cfi')
-process.load('L1Trigger.L1TCalorimeter.caloStage2Params_2017_v1_8_2_updateHFSF_v6MET_cfi')
-#process.load("L1Trigger.L1TCalorimeter.hackConditions_cff")
+if options.caloParams:
+    # To get L1 CaloParams if we don't want what is in the GT
+    # (typically true unless checking params of a previous data run)
+    process.load('L1Trigger.L1TCalorimeter.'+options.caloParams)
 
-# These are not yet in CaloParams by default
-from L1Trigger.L1TCaloLayer1LUTWriter.layer1SecondStageLUTs import layer1SecondStageLUT
-process.caloStage2Params.layer1SecondStageLUT = layer1SecondStageLUT 
+    # These are not yet in CaloParams by default
+    from L1Trigger.L1TCaloLayer1LUTWriter.layer1SecondStageLUTs import layer1SecondStageLUT
+    process.caloStage2Params.layer1SecondStageLUT = layer1SecondStageLUT
 
 
-# HCAL Plan1 geometry can be loaded form RecoDB if using a recent enough run number
+# HCAL Plan1 geometry can be loaded form RecoDB if using a recent enough run number (or a MC global tag)
 # Beware that the HCAL compression LUTs ARE RUN DEPENDENT
 process.load("Configuration.StandardSequences.GeometryRecoDB_cff")
 # These geometry files might be useful if the GT doesn't have what we need in any IOV
