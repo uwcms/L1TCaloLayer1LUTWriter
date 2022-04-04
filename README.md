@@ -3,11 +3,14 @@ L1TCaloLayer1LUTWriter
 
 Setup instructions:
 ```bash
-cmsrel CMSSW_10_0_0
-cd CMSSW_10_0_0/src/
+cmsrel CMSSW_12_3_0_pre1
+cd CMSSW_12_3_0_pre1/src
 cmsenv
 git cms-init
-git cms-merge-topic -u cms-l1t-offline:l1t-integration-$CMSSW_VERSION
+git remote add cms-l1t-offline git@github.com:cms-l1t-offline/cmssw.git
+git fetch cms-l1t-offline l1t-integration-CMSSW_12_3_0
+git cms-merge-topic -u cms-l1t-offline:l1t-integration-v119.0
+git clone https://github.com/cms-l1t-offline/L1Trigger-L1TCalorimeter.git L1Trigger/L1TCalorimeter/data
 pushd L1Trigger
 git clone git@github.com:uwcms/L1TCaloLayer1LUTWriter.git
 popd
