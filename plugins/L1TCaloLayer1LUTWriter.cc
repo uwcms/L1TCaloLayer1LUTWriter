@@ -91,6 +91,7 @@ private:
 
   // ----------member data ---------------------------
 
+  const L1TCaloLayer1FetchLUTsTokens lutsTokens;
   bool useLSB;
   bool useCalib;
   bool useECALLUT;
@@ -112,6 +113,9 @@ private:
 };
 
 L1TCaloLayer1LUTWriter::L1TCaloLayer1LUTWriter(const edm::ParameterSet& iConfig) :
+  lutsTokens{esConsumes<edm::Transition::Event>(),
+             esConsumes<edm::Transition::Event>(),
+             esConsumes<edm::Transition::Event>()},
   useLSB(iConfig.getParameter<bool>("useLSB")),
   useCalib(iConfig.getParameter<bool>("useCalib")),
   useECALLUT(iConfig.getParameter<bool>("useECALLUT")),
@@ -228,9 +232,8 @@ L1TCaloLayer1LUTWriter::analyze(const edm::Event& iEvent, const edm::EventSetup&
   if ( writer_ == NULL ) return;
 
   // CaloParams contains all persisted parameters for Layer 1
-  edm::ESHandle<l1t::CaloParams> paramsHandle;
-  iSetup.get<L1TCaloParamsRcd>().get(paramsHandle);
-  if ( paramsHandle.product() == nullptr ) {
+  edm::ESHandle<l1t::CaloParams> paramsHandle = iSetup.getHandle(lutsTokens.params_);
+  if (not paramsHandle.isValid()) {
     edm::LogError("L1TCaloLayer1LUTWriter") << "Missing CaloParams object! Check Global Tag, etc.";
     return;
   }
@@ -238,9 +241,8 @@ L1TCaloLayer1LUTWriter::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
 
   if ( saveHcalScaleFile ) {
-    edm::ESHandle<CaloTPGTranscoder> decoder;
-    iSetup.get<CaloTPGRecord>().get(decoder);
-    if ( decoder.product() == nullptr ) {
+    edm::ESHandle<CaloTPGTranscoder> decoder = iSetup.getHandle(lutsTokens.decoder_);
+    if (not decoder.isValid()) {
       edm::LogError("L1TCaloLayer1LUTWriter") << "Missing CaloTPGTranscoder object! Check Global Tag, etc.";
       return;
     }
@@ -269,7 +271,7 @@ L1TCaloLayer1LUTWriter::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
 
   // Helper function translates CaloParams into actual LUT vectors
-  if(!L1TCaloLayer1FetchLUTs(iSetup, ecalLUT, hcalLUT, hfLUT, ePhiMap, hPhiMap, hfPhiMap, useLSB, useCalib, useECALLUT, useHCALLUT, useHFLUT, firmwareVersion)) {
+  if(!L1TCaloLayer1FetchLUTs(lutsTokens, iSetup, ecalLUT, hcalLUT, hfLUT, ePhiMap, hPhiMap, hfPhiMap, useLSB, useCalib, useECALLUT, useHCALLUT, useHFLUT, firmwareVersion)) {
     edm::LogError("L1TCaloLayer1LUTWriter") << "Failed to fetch LUTs";
     return;
   }
