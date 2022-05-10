@@ -39,7 +39,7 @@ process.schedule = cms.Schedule(process.p)
 process.l1tCaloLayer1LUTWriter.firmwareVersion = 3
 
 # Will affect the HCAL LUTs, and CaloParams if they are ever in GT...
-process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase1_2018_realistic', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '123X_mcRun3_2021_realistic_v13', '')
 
 
 if options.caloParams:
