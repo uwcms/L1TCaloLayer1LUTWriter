@@ -8,6 +8,7 @@ l1tCaloLayer1LUTWriter = cms.EDAnalyzer('L1TCaloLayer1LUTWriter',
     useECALLUT = cms.bool(True),
     useHCALLUT = cms.bool(True),
     useHFLUT = cms.bool(True),
+    useHCALFBLUT = cms.bool(True),
     firmwareVersion = cms.int32(1),
     saveHcalScaleFile = cms.bool(False),
 )

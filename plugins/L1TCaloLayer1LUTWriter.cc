@@ -72,12 +72,15 @@ private:
   bool writeSWATCHVector(std::string id, const std::vector<int> vect);
   bool writeSWATCHVector(std::string id, const std::vector<unsigned int> vect);
   bool writeSWATCHVector(std::string id, const std::vector<double> vect);
+  bool writeSWATCHVector(std::string id, const std::vector<unsigned long long> vect); //Victor's edit
   bool writeSWATCHTableRow(std::vector<uint32_t> vect);
+  bool writeSWATCHTableRow(std::vector<uint64_t> vect); //Victor's edit
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
 
   bool writeECALLUT(std::string id, uint32_t index, MD5_CTX& md5context);
   bool writeHCALLUT(std::string id, uint32_t index, MD5_CTX& md5context);
   bool writeHFLUT(std::string id, uint32_t index, MD5_CTX& md5context);
+  bool writeHCALFBLUT(std::string id, uint32_t index, MD5_CTX& md5context); //Victor's edit
 
   // Wrapper for xmllib error codes
   // returnCode < 0 if error
@@ -97,12 +100,14 @@ private:
   bool useECALLUT;
   bool useHCALLUT;
   bool useHFLUT;
+  bool useHCALFBLUT; //Victor's edit
   int firmwareVersion;
   bool saveHcalScaleFile;
 
   std::vector< std::array< std::array< std::array<uint32_t, l1tcalo::nEtBins>, l1tcalo::nCalSideBins >, l1tcalo::nCalEtaBins> > ecalLUT;
   std::vector< std::array< std::array< std::array<uint32_t, l1tcalo::nEtBins>, l1tcalo::nCalSideBins >, l1tcalo::nCalEtaBins> > hcalLUT;
   std::vector< std::array< std::array<uint32_t, l1tcalo::nEtBins>, l1tcalo::nHfEtaBins > > hfLUT;
+  std::vector<std::array<uint64_t, l1tcalo::nCalSideBins> > hcalFBLUT; //Victor's edit
 
   std::vector< unsigned int > ePhiMap;
   std::vector< unsigned int > hPhiMap;
@@ -121,6 +126,7 @@ L1TCaloLayer1LUTWriter::L1TCaloLayer1LUTWriter(const edm::ParameterSet& iConfig)
   useECALLUT(iConfig.getParameter<bool>("useECALLUT")),
   useHCALLUT(iConfig.getParameter<bool>("useHCALLUT")),
   useHFLUT(iConfig.getParameter<bool>("useHFLUT")),
+  useHCALFBLUT(iConfig.getParameter<bool>("useHCALFBLUT")), //Victor's edit
   firmwareVersion(iConfig.getParameter<int>("firmwareVersion")),
   saveHcalScaleFile(iConfig.getParameter<bool>("saveHcalScaleFile")),
   ePhiMap(72*2),
@@ -185,6 +191,23 @@ L1TCaloLayer1LUTWriter::writeSWATCHTableRow(std::vector<uint32_t> vect)
   return true;
 }
 
+//Start of Victor's edit
+bool
+L1TCaloLayer1LUTWriter::writeSWATCHTableRow(std::vector<uint64_t> vect)
+{
+  std::stringstream output;
+  for(auto it=vect.begin(); it!=vect.end(); ++it) {
+    output << std::showbase << std::internal << std::setfill('0') << std::setw(6) << std::hex << *it;
+    if ( it != vect.end()-1 ) {
+      output << ", ";
+    }
+  }
+
+  if ( !rcWrap(xmlTextWriterWriteElement(writer_, BAD_CAST "row", BAD_CAST output.str().c_str())) ) return false;
+  return true;
+}
+//End of Victor's edit
+
 bool
 L1TCaloLayer1LUTWriter::writeSWATCHVector(std::string id, const std::vector<int> vect)
 {
@@ -223,6 +246,21 @@ L1TCaloLayer1LUTWriter::writeSWATCHVector(std::string id, const std::vector<doub
   }
   return writeXMLParam(id, "vector:float", output.str());
 }
+
+//Start of Victor's edit
+bool
+L1TCaloLayer1LUTWriter::writeSWATCHVector(std::string id, const std::vector<unsigned long long> vect)
+{
+  std::stringstream output;
+  for(auto it=vect.begin(); it!=vect.end(); ++it) {
+    output << (float) *it;
+    if ( it != vect.end()-1 ) {
+      output << ", ";
+    }
+  }
+  return writeXMLParam(id, "vector:uint64", output.str());
+}
+//End of Victor's edit
 
 // ------------ method called for each event  ------------
 void
@@ -268,10 +306,10 @@ L1TCaloLayer1LUTWriter::analyze(const edm::Event& iEvent, const edm::EventSetup&
     }
     hs.close();
   }
-
-
+  
   // Helper function translates CaloParams into actual LUT vectors
-  if(!L1TCaloLayer1FetchLUTs(lutsTokens, iSetup, ecalLUT, hcalLUT, hfLUT, ePhiMap, hPhiMap, hfPhiMap, useLSB, useCalib, useECALLUT, useHCALLUT, useHFLUT, firmwareVersion)) {
+  //Victor's edit
+  if(!L1TCaloLayer1FetchLUTs(lutsTokens, iSetup, ecalLUT, hcalLUT, hfLUT, hcalFBLUT, ePhiMap, hPhiMap, hfPhiMap, useLSB, useCalib, useECALLUT, useHCALLUT, useHFLUT, useHCALFBLUT, firmwareVersion)) {
     edm::LogError("L1TCaloLayer1LUTWriter") << "Failed to fetch LUTs";
     return;
   }
@@ -301,12 +339,14 @@ L1TCaloLayer1LUTWriter::analyze(const edm::Event& iEvent, const edm::EventSetup&
   if ( !writeSWATCHVector("layer1HFScaleETBins", caloParams.layer1HFScaleETBins()) ) return;
   if ( !writeSWATCHVector("layer1HFScalePhiBins", caloParams.layer1HFScalePhiBins()) ) return;
   if ( !writeSWATCHVector("layer1HFScaleFactors", caloParams.layer1HFScaleFactors()) ) return;
+  if ( !writeSWATCHVector("hcalFBLUT", caloParams.layer1HCalFBLUT()) ) return; //Victor's edit
   if ( !writeXMLParam("towerLsbSum", "float", std::to_string(caloParams.towerLsbSum())) ) return;
   if ( !writeXMLParam("useLSB", "bool", (useLSB) ? "true":"false") ) return;
   if ( !writeXMLParam("useCalib", "bool", (useCalib) ? "true":"false") ) return;
   if ( !writeXMLParam("useECALLUT", "bool", (useECALLUT) ? "true":"false") ) return;
   if ( !writeXMLParam("useHCALLUT", "bool", (useHCALLUT) ? "true":"false") ) return;
   if ( !writeXMLParam("useHFLUT", "bool", (useHFLUT) ? "true":"false") ) return;
+  if ( !writeXMLParam("useHCALFBLUT", "bool", (useHCALFBLUT) ? "true":"false") ) return; //Victor's edit
 
   // We will checksum the LUT contents and put it at the end
   MD5_CTX md5context;
@@ -337,6 +377,12 @@ L1TCaloLayer1LUTWriter::analyze(const edm::Event& iEvent, const edm::EventSetup&
   // Loop and write the HF LUT -> Minus and Plus
   if ( !writeHFLUT("HFLUTMinus",0,md5context) ) return;
   if ( !writeHFLUT("HFLUTPlus",0,md5context) ) return;
+
+  //Start of Victor's edit
+  // Loop and write the HCAL FB LUT -> Minus and Plus
+  if ( !writeHCALFBLUT("HCALFBLUTMinus",0,md5context) ) return;
+  if ( !writeHCALFBLUT("HCALFBLUTPlus",0,md5context) ) return;
+  //End of Victor's edit
 
   // Now to write the checksum
   unsigned char checksum[MD5_DIGEST_LENGTH];
@@ -596,6 +642,46 @@ L1TCaloLayer1LUTWriter::writeHFLUT(std::string id, uint32_t index, MD5_CTX& md5c
 
   return true;
 }
+
+//Start of Victor's edit
+bool
+L1TCaloLayer1LUTWriter::writeHCALFBLUT(std::string id, uint32_t index, MD5_CTX& md5context) {
+
+  // <param id="HCALFBLUT" type="table">
+  if ( !rcWrap(xmlTextWriterStartElement(writer_, BAD_CAST "param")) ) return false;
+  if ( !rcWrap(xmlTextWriterWriteAttribute(writer_, BAD_CAST "id", BAD_CAST id.c_str())) ) return false;
+  if ( !rcWrap(xmlTextWriterWriteAttribute(writer_, BAD_CAST "type", BAD_CAST "table")) ) return false;
+
+  // <columns>
+  const char * hcalFB_columns{"Input, 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28"};
+  if ( !rcWrap(xmlTextWriterWriteElement(writer_, BAD_CAST "columns", BAD_CAST hcalFB_columns)) ) return false;
+
+  // <types>
+  const char * hcalFB_types{"uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64"};
+  if ( !rcWrap(xmlTextWriterWriteElement(writer_, BAD_CAST "types", BAD_CAST hcalFB_types)) ) return false;
+
+  // <rows>
+  if ( !rcWrap(xmlTextWriterStartElement(writer_, BAD_CAST "rows")) ) return false;
+
+  for(uint64_t fb = 0; fb < 2; fb++ ) {
+    std::vector<uint64_t> row;
+    row.push_back(fb); 
+    for(int iEta=1; iEta<=28; ++iEta) {
+      uint64_t value = hcalFBLUT[iEta][fb];
+      row.push_back(value);
+    }
+    MD5_Update(&md5context, &row[1], (row.size()-1)*sizeof(uint64_t));
+    if ( !writeSWATCHTableRow(row) ) return false;
+  }
+
+  // </rows>
+  if ( !rcWrap(xmlTextWriterEndElement(writer_)) ) return false;
+  // </param>
+  if ( !rcWrap(xmlTextWriterEndElement(writer_)) ) return false;
+
+  return true;
+}
+//End of Victor's edit
 
 // ------------ method called once each job just before starting event loop  ------------
 /*
