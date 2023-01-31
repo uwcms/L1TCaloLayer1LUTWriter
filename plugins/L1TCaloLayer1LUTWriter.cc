@@ -277,7 +277,6 @@ L1TCaloLayer1LUTWriter::analyze(const edm::Event& iEvent, const edm::EventSetup&
   }
   l1t::CaloParamsHelper caloParams(*paramsHandle.product());
 
-
   if ( saveHcalScaleFile ) {
     edm::ESHandle<CaloTPGTranscoder> decoder = iSetup.getHandle(lutsTokens.decoder_);
     if (not decoder.isValid()) {
@@ -339,7 +338,6 @@ L1TCaloLayer1LUTWriter::analyze(const edm::Event& iEvent, const edm::EventSetup&
   if ( !writeSWATCHVector("layer1HFScaleETBins", caloParams.layer1HFScaleETBins()) ) return;
   if ( !writeSWATCHVector("layer1HFScalePhiBins", caloParams.layer1HFScalePhiBins()) ) return;
   if ( !writeSWATCHVector("layer1HFScaleFactors", caloParams.layer1HFScaleFactors()) ) return;
-  if ( !writeSWATCHVector("hcalFBLUT", caloParams.layer1HCalFBLUT()) ) return; //Victor's edit
   if ( !writeXMLParam("towerLsbSum", "float", std::to_string(caloParams.towerLsbSum())) ) return;
   if ( !writeXMLParam("useLSB", "bool", (useLSB) ? "true":"false") ) return;
   if ( !writeXMLParam("useCalib", "bool", (useCalib) ? "true":"false") ) return;
@@ -653,20 +651,19 @@ L1TCaloLayer1LUTWriter::writeHCALFBLUT(std::string id, uint32_t index, MD5_CTX& 
   if ( !rcWrap(xmlTextWriterWriteAttribute(writer_, BAD_CAST "type", BAD_CAST "table")) ) return false;
 
   // <columns>
-  const char * hcalFB_columns{"Input, 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28"};
+  const char * hcalFB_columns{"01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28"};
   if ( !rcWrap(xmlTextWriterWriteElement(writer_, BAD_CAST "columns", BAD_CAST hcalFB_columns)) ) return false;
 
   // <types>
-  const char * hcalFB_types{"uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64"};
+  const char * hcalFB_types{"uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64, uint64"};
   if ( !rcWrap(xmlTextWriterWriteElement(writer_, BAD_CAST "types", BAD_CAST hcalFB_types)) ) return false;
 
   // <rows>
   if ( !rcWrap(xmlTextWriterStartElement(writer_, BAD_CAST "rows")) ) return false;
 
-  for(uint64_t fb = 0; fb < 2; fb++ ) {
+  for(uint32_t fb = 0; fb < 2; fb++ ) {
     std::vector<uint64_t> row;
-    row.push_back(fb); 
-    for(int iEta=1; iEta<=28; ++iEta) {
+    for(int iEta=0; iEta<28; ++iEta) {
       uint64_t value = hcalFBLUT[iEta][fb];
       row.push_back(value);
     }
