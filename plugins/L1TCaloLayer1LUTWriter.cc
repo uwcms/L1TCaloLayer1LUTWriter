@@ -654,7 +654,7 @@ L1TCaloLayer1LUTWriter::writeHCALFBLUT(std::string id, uint32_t index, MD5_CTX& 
   // <rows>
   if ( !rcWrap(xmlTextWriterStartElement(writer_, BAD_CAST "rows")) ) return false;
 
-  for(uint32_t fb = 0; fb < 2; fb++ ) {
+  for(uint32_t fb = 0; fb < 1; fb++ ) {
     std::vector<uint64_t> row;
     for(int iEta=0; iEta<28; ++iEta) {
       uint64_t value = hcalFBLUT[iEta][fb];
