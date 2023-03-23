@@ -336,7 +336,7 @@ L1TCaloLayer1LUTWriter::analyze(const edm::Event& iEvent, const edm::EventSetup&
   if ( !writeSWATCHVector("layer1HFScaleFactors", caloParams.layer1HFScaleFactors()) ) return;
   if ( !writeSWATCHVector("layer1HFScaleFactors", caloParams.layer1HFScaleFactors()) ) return;
   if ( !writeSWATCHVector("layer1HCalFBLUTUpper", caloParams.layer1HCalFBLUTUpper()) ) return;
-  //if ( !writeSWATCHVector("layer1HCalFBLUTLower", caloParams.layer1HCalFBLUTLower()) ) return;
+  if ( !writeSWATCHVector("layer1HCalFBLUTLower", caloParams.layer1HCalFBLUTLower()) ) return;
   if ( !writeXMLParam("towerLsbSum", "float", std::to_string(caloParams.towerLsbSum())) ) return;
   if ( !writeXMLParam("useLSB", "bool", (useLSB) ? "true":"false") ) return;
   if ( !writeXMLParam("useCalib", "bool", (useCalib) ? "true":"false") ) return;
