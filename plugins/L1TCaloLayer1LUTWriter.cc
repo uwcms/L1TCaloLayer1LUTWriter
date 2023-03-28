@@ -30,7 +30,7 @@
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/EDAnalyzer.h"
+#include "FWCore/Framework/interface/one/EDAnalyzer.h"
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -58,15 +58,25 @@
 // class declaration
 //
 
-class L1TCaloLayer1LUTWriter : public edm::EDAnalyzer {
+class L1TCaloLayer1LUTWriter : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::one::WatchRuns, edm::one::WatchLuminosityBlocks> {
 public:
-  explicit L1TCaloLayer1LUTWriter(const edm::ParameterSet&);
+  explicit L1TCaloLayer1LUTWriter(const edm::ParameterSet& iConfig);
   ~L1TCaloLayer1LUTWriter();
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
 
 private:
+  //----edm control---
+  virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
+
+  virtual void beginJob() override;
+  virtual void endJob() override;
+  virtual void beginRun(edm::Run const&, edm::EventSetup const&);
+  virtual void endRun(edm::Run const&, edm::EventSetup const&);
+  virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
+  virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
+
 
   bool writeXMLParam(std::string id, std::string type, std::string body);
   bool writeSWATCHVector(std::string id, const std::vector<int> vect);
@@ -75,7 +85,6 @@ private:
   bool writeSWATCHVector(std::string id, const std::vector<unsigned long long int> vect);
   bool writeSWATCHTableRow(std::vector<uint32_t> vect);
   bool writeSWATCHTableRow(std::vector<uint64_t> vect);
-  virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
 
   bool writeECALLUT(std::string id, uint32_t index, MD5_CTX& md5context);
   bool writeHCALLUT(std::string id, uint32_t index, MD5_CTX& md5context);
@@ -674,51 +683,51 @@ L1TCaloLayer1LUTWriter::writeHCALFBLUT(std::string id, uint32_t index, MD5_CTX& 
 }
 
 // ------------ method called once each job just before starting event loop  ------------
-/*
+
   void 
   L1TCaloLayer1LUTWriter::beginJob()
   {
   }
-*/
+
 
 // ------------ method called once each job just after ending the event loop  ------------
-/*
+
   void 
   L1TCaloLayer1LUTWriter::endJob() 
   {
   }
-*/
+
 // ------------ method called when starting to processes a run  ------------
-/*
+
   void 
   L1TCaloLayer1LUTWriter::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup)
   {
   }
-*/
+
 
 // ------------ method called when ending the processing of a run  ------------
-/*
+
   void 
   L1TCaloLayer1LUTWriter::endRun(edm::Run const&, edm::EventSetup const&)
   {
   }
-*/
+
 
 // ------------ method called when starting to processes a luminosity block  ------------
-/*
+
   void 
   L1TCaloLayer1LUTWriter::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
   {
   }
-*/
+
 
 // ------------ method called when ending the processing of a luminosity block  ------------
-/*
+
   void 
   L1TCaloLayer1LUTWriter::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
   {
   }
-*/
+
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void

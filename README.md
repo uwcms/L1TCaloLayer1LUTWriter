@@ -3,14 +3,15 @@ L1TCaloLayer1LUTWriter
 
 Setup instructions:
 ```bash
-cmsrel CMSSW_12_3_0_pre6
-cd CMSSW_12_3_0_pre6/src
+cmsrel CMSSW_13_1_0_pre2
+cd CMSSW_13_1_0_pre2/src
 cmsenv
 git cms-init
 git remote add cms-l1t-offline git@github.com:cms-l1t-offline/cmssw.git
-git fetch cms-l1t-offline l1t-integration-CMSSW_12_3_0_pre6
-git cms-merge-topic -u cms-l1t-offline:l1t-integration-v127.0
+git fetch cms-l1t-offline l1t-integration-CMSSW_13_1_0_pre2
+git cms-merge-topic -u cms-l1t-offline:l1t-integration-v147-CMSSW_13_1_0_pre2
 git clone https://github.com/cms-l1t-offline/L1Trigger-L1TCalorimeter.git L1Trigger/L1TCalorimeter/data
+git cms-checkdeps -a -A
 pushd L1Trigger
 git clone git@github.com:uwcms/L1TCaloLayer1LUTWriter.git
 popd
@@ -20,7 +21,7 @@ cd L1Trigger/L1TCaloLayer1LUTWriter/test
 
 Example of generating the LUTs:
 ```bash
-cmsRun testL1TCaloLayer1LUTWriter.py caloParams=caloParams_2018_v1_1_inconsistent_cfi
+cmsRun testL1TCaloLayer1LUTWriter.py caloParams=caloParams_2022_v0_6_cfi
 ```
 
 Configuration options for `testL1TCaloLayer1LUTWriter.py`:
