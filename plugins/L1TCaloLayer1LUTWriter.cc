@@ -30,7 +30,7 @@
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/EDAnalyzer.h"
+#include "FWCore/Framework/interface/one/EDAnalyzer.h"
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -58,24 +58,33 @@
 // class declaration
 //
 
-class L1TCaloLayer1LUTWriter : public edm::EDAnalyzer {
+class L1TCaloLayer1LUTWriter : public edm::one::EDAnalyzer<edm::one::SharedResources, edm::one::WatchRuns, edm::one::WatchLuminosityBlocks> {
 public:
-  explicit L1TCaloLayer1LUTWriter(const edm::ParameterSet&);
+  explicit L1TCaloLayer1LUTWriter(const edm::ParameterSet& iConfig);
   ~L1TCaloLayer1LUTWriter();
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
 
 private:
+  //----edm control---
+  virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
+
+  virtual void beginJob() override;
+  virtual void endJob() override;
+  virtual void beginRun(edm::Run const&, edm::EventSetup const&);
+  virtual void endRun(edm::Run const&, edm::EventSetup const&);
+  virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
+  virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
+
 
   bool writeXMLParam(std::string id, std::string type, std::string body);
   bool writeSWATCHVector(std::string id, const std::vector<int> vect);
   bool writeSWATCHVector(std::string id, const std::vector<unsigned int> vect);
   bool writeSWATCHVector(std::string id, const std::vector<double> vect);
-  bool writeSWATCHVector(std::string id, const std::vector<unsigned long long> vect);
+  bool writeSWATCHVector(std::string id, const std::vector<unsigned long long int> vect);
   bool writeSWATCHTableRow(std::vector<uint32_t> vect);
   bool writeSWATCHTableRow(std::vector<uint64_t> vect);
-  virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
 
   bool writeECALLUT(std::string id, uint32_t index, MD5_CTX& md5context);
   bool writeHCALLUT(std::string id, uint32_t index, MD5_CTX& md5context);
@@ -107,7 +116,7 @@ private:
   std::vector< std::array< std::array< std::array<uint32_t, l1tcalo::nEtBins>, l1tcalo::nCalSideBins >, l1tcalo::nCalEtaBins> > ecalLUT;
   std::vector< std::array< std::array< std::array<uint32_t, l1tcalo::nEtBins>, l1tcalo::nCalSideBins >, l1tcalo::nCalEtaBins> > hcalLUT;
   std::vector< std::array< std::array<uint32_t, l1tcalo::nEtBins>, l1tcalo::nHfEtaBins > > hfLUT;
-  std::vector<std::array<uint64_t, l1tcalo::nCalSideBins> > hcalFBLUT;
+  std::vector< unsigned long long int > hcalFBLUT;
 
   std::vector< unsigned int > ePhiMap;
   std::vector< unsigned int > hPhiMap;
@@ -246,7 +255,7 @@ L1TCaloLayer1LUTWriter::writeSWATCHVector(std::string id, const std::vector<doub
 }
 
 bool
-L1TCaloLayer1LUTWriter::writeSWATCHVector(std::string id, const std::vector<unsigned long long> vect)
+L1TCaloLayer1LUTWriter::writeSWATCHVector(std::string id, const std::vector<unsigned long long int> vect)
 {
   std::stringstream output;
   for(auto it=vect.begin(); it!=vect.end(); ++it) {
@@ -334,6 +343,9 @@ L1TCaloLayer1LUTWriter::analyze(const edm::Event& iEvent, const edm::EventSetup&
   if ( !writeSWATCHVector("layer1HFScaleETBins", caloParams.layer1HFScaleETBins()) ) return;
   if ( !writeSWATCHVector("layer1HFScalePhiBins", caloParams.layer1HFScalePhiBins()) ) return;
   if ( !writeSWATCHVector("layer1HFScaleFactors", caloParams.layer1HFScaleFactors()) ) return;
+  if ( !writeSWATCHVector("layer1HFScaleFactors", caloParams.layer1HFScaleFactors()) ) return;
+  if ( !writeSWATCHVector("layer1HCalFBLUTUpper", caloParams.layer1HCalFBLUTUpper()) ) return;
+  if ( !writeSWATCHVector("layer1HCalFBLUTLower", caloParams.layer1HCalFBLUTLower()) ) return;
   if ( !writeXMLParam("towerLsbSum", "float", std::to_string(caloParams.towerLsbSum())) ) return;
   if ( !writeXMLParam("useLSB", "bool", (useLSB) ? "true":"false") ) return;
   if ( !writeXMLParam("useCalib", "bool", (useCalib) ? "true":"false") ) return;
@@ -654,15 +666,13 @@ L1TCaloLayer1LUTWriter::writeHCALFBLUT(std::string id, uint32_t index, MD5_CTX& 
   // <rows>
   if ( !rcWrap(xmlTextWriterStartElement(writer_, BAD_CAST "rows")) ) return false;
 
-  for(uint32_t fb = 0; fb < 1; fb++ ) {
-    std::vector<uint64_t> row;
-    for(int iEta=0; iEta<28; ++iEta) {
-      uint64_t value = hcalFBLUT[iEta][fb];
-      row.push_back(value);
-    }
-    MD5_Update(&md5context, &row[1], (row.size()-1)*sizeof(uint64_t));
-    if ( !writeSWATCHTableRow(row) ) return false;
+  std::vector<uint64_t> row;
+  for(int iEta=0; iEta<28; ++iEta) {
+    uint64_t value = hcalFBLUT[iEta];
+    row.push_back(value);
   }
+  MD5_Update(&md5context, &row[1], (row.size()-1)*sizeof(uint64_t));
+  if ( !writeSWATCHTableRow(row) ) return false;
 
   // </rows>
   if ( !rcWrap(xmlTextWriterEndElement(writer_)) ) return false;
@@ -673,51 +683,51 @@ L1TCaloLayer1LUTWriter::writeHCALFBLUT(std::string id, uint32_t index, MD5_CTX& 
 }
 
 // ------------ method called once each job just before starting event loop  ------------
-/*
+
   void 
   L1TCaloLayer1LUTWriter::beginJob()
   {
   }
-*/
+
 
 // ------------ method called once each job just after ending the event loop  ------------
-/*
+
   void 
   L1TCaloLayer1LUTWriter::endJob() 
   {
   }
-*/
+
 // ------------ method called when starting to processes a run  ------------
-/*
+
   void 
   L1TCaloLayer1LUTWriter::beginRun(const edm::Run& iRun, const edm::EventSetup& iSetup)
   {
   }
-*/
+
 
 // ------------ method called when ending the processing of a run  ------------
-/*
+
   void 
   L1TCaloLayer1LUTWriter::endRun(edm::Run const&, edm::EventSetup const&)
   {
   }
-*/
+
 
 // ------------ method called when starting to processes a luminosity block  ------------
-/*
+
   void 
   L1TCaloLayer1LUTWriter::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
   {
   }
-*/
+
 
 // ------------ method called when ending the processing of a luminosity block  ------------
-/*
+
   void 
   L1TCaloLayer1LUTWriter::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&)
   {
   }
-*/
+
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
